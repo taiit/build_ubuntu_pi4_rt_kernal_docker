@@ -5,8 +5,8 @@ and name it e.g:
 ```
 $ cat /boot/config-$(uname -r) > rapi_$(uname -r).config
 $ ls
-rapi_5.15.0-1024-raspi.config
+rapi_5.15.0-1029-raspi.config
 $
 ```
 
-Then copy merge it to your build.
+Then copy/update to the file rapi_5.15.0-1029-raspi.config
