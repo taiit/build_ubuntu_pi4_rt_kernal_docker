@@ -8,7 +8,7 @@ ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
 
 ARG ARCH=arm64
-#ARG UNAME_R=5.15.0-1028-raspi
+#ARG UNAME_R=5.15.0-1029-rasp
 # Get latest from: http://ports.ubuntu.com/pool/main/l/linux-raspi/
 ARG UNAME_R=5.15.0-1029-raspi
 ARG RT_PATCH
@@ -16,7 +16,6 @@ ARG triple=aarch64-linux-gnu
 ARG KERNEL_VERSION=5.15.0
 #ARG UBUNTU_VERSION=focal
 ARG UBUNTU_VERSION=jammy
-ARG LTTNG_VERSION=2.13
 ARG KERNEL_DIR=linux-raspi
 
 # setup timezone
@@ -68,6 +67,8 @@ USER docker_user
 
 RUN sed -i 's,#force_color_prompt,force_color_prompt,'  /home/docker_user/.bashrc
 RUN echo "cd ~" >>  ~/.bashrc
+RUN echo "export CROSS_COMPILE=${triple}-" >>  ~/.bashrc
+RUN echo "export ARCH=arm64" >>  ~/.bashrc
 
 # Setup user tool
 # VIM Vundle, Vim plugin manager.
@@ -81,11 +82,6 @@ RUN python3 /home/docker_user/.vim/bundle/youcompleteme/install.py --clang-compl
 
 #0. Init
 RUN mkdir -p                /home/docker_user/work/linux_build
-
-COPY ./getpatch.sh         /home/docker_user/work/
-COPY ./build_rt_bash.sh    /home/docker_user/work/
-COPY ./.config-fragment    /home/docker_user/work/
-
 
 # 1. install linux sources from git
 RUN git clone -b master --depth 1 --single-branch --progress --verbose \
@@ -105,6 +101,9 @@ RUN  cd /home/docker_user/work/linux_build/linux-raspi \
     && git tag -l *`cat /home/docker_user/work/linux_build/pi_kernel.txt | cut -d '-' -f 2`* | sort -V | tail -1 > /home/docker_user/work/linux_build/pi_kernel_tag.txt \
     && git checkout `cat /home/docker_user/work/linux_build/pi_kernel_tag.txt`
 
+COPY ./getpatch.sh         /home/docker_user/work/
+COPY ./build_rt_bash.sh    /home/docker_user/work/
+COPY ./.config-fragment    /home/docker_user/work/
 
 #4. install buildinfo to retieve `raspi` kernel config
 RUN  cd /home/docker_user/work/linux_build \
@@ -131,11 +130,6 @@ RUN cd /home/docker_user/work/linux_build/linux-raspi \
     && export CROSS_COMPILE=${triple}- \
     && fakeroot debian/rules clean \
     && LANG=C fakeroot debian/rules printenv
-# 
-#   export $(dpkg-architecture -aarm64
-#   export CROSS_COMPILE=aarch64-linux-gnu-
-#   fakeroot debian/rules clean
-#   LANG=C fakeroot debian/rules printenv
 
 # config RT kernel and merge config fragment
 #. e.g: /home/docker_user/work/linux_build/usr/lib/linux/5.15.0-1029-raspi/config
@@ -143,7 +137,7 @@ RUN cp  /home/docker_user/work/linux_build/usr/lib/linux/`cat /home/docker_user/
 
 # /home/docker_user/work/.config-fragment (user seting)
 RUN cd /home/docker_user/work/linux_build/linux-raspi \
-    && ARCH=${ARCH} CROSS_COMPILE=${triple}-   ./scripts/kconfig/merge_config.sh    .config     /home/docker_user/work/.config-fragment
+    && ARCH=${ARCH} CROSS_COMPILE=${triple}-   ./scripts/kconfig/merge_config.sh    .config /home/docker_user/work/.config-fragment
 
 RUN cd /home/docker_user/work/linux_build/linux-raspi \
     && fakeroot debian/rules clean
