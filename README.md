@@ -41,8 +41,9 @@ drwxr-xr-x 1 docker_user docker_user     4096 Jun  4 11:35 ../
 -rw-r--r-- 1 docker_user docker_user  1226212 Jun  4 11:53 linux-libc-dev_5.15.98-rt62-raspi-1_arm64.deb
 ```
 copy these file to raspberry
-
-install it
+docker_user@93690276f814:~/work/linux_build$ scp -r v3/ taihv@192.168.0.10:/home/taihv/work/Kernel/
+install it. into raspberri
+$/home/taihv/work/Kernel/v3$: sudo dpkg -i *.deb
 
 ### Commit docker (optional)
 ``` bash
